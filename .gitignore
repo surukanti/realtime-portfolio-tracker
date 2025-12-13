@@ -1,0 +1,76 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+vendor/
+*.log
+
+# Backend specific
+backend/pkg/pb/*.go
+backend/tmp/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Frontend
+node_modules/
+.npm
+.eslintcache
+frontend/build/
+frontend/dist/
+frontend/.next/
+frontend/out/
+*.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+postgres-data/
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# Testing
+coverage/
+*.cover
+*.coverprofile
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Certificates (if any)
+*.pem
+*.key
+*.crt
+
+# API Keys (should use .env but just in case)
+*apikey*
+*secret*
