@@ -1,0 +1,100 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: portfolio-postgres
+    environment:
+      POSTGRES_USER: portfolio_user
+      POSTGRES_PASSWORD: portfolio_pass
+      POSTGRES_DB: portfolio_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U portfolio_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - portfolio-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: portfolio-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - portfolio-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: portfolio-backend
+    ports:
+      - "50051:50051"  # gRPC
+      - "8080:8080"    # gRPC-Web (Envoy proxy)
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=portfolio_user
+      - DB_PASSWORD=portfolio_pass
+      - DB_NAME=portfolio_db
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - GRPC_PORT=50051
+      - ALPHA_VANTAGE_API_KEY=${ALPHA_VANTAGE_API_KEY:-demo}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+
+  envoy:
+    image: envoyproxy/envoy:v1.28-latest
+    container_name: portfolio-envoy
+    ports:
+      - "8081:8081"
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    depends_on:
+      - backend
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: portfolio-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_GRPC_WEB_URL=http://localhost:8081
+    depends_on:
+      - envoy
+    networks:
+      - portfolio-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  portfolio-network:
+    driver: bridge

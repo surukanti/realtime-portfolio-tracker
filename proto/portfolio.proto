@@ -1,0 +1,178 @@
+syntax = "proto3";
+
+package portfolio;
+
+option go_package = "github.com/yourusername/realtime-portfolio-tracker/backend/pkg/pb";
+
+// Portfolio Service Definition
+service PortfolioService {
+  // Unary RPC: Add stock to portfolio
+  rpc AddStock(AddStockRequest) returns (AddStockResponse);
+  
+  // Unary RPC: Get portfolio summary
+  rpc GetPortfolio(GetPortfolioRequest) returns (GetPortfolioResponse);
+  
+  // Unary RPC: Set price alert
+  rpc SetPriceAlert(SetPriceAlertRequest) returns (SetPriceAlertResponse);
+  
+  // Server Streaming: Real-time price updates for watchlist
+  rpc StreamPrices(StreamPricesRequest) returns (stream PriceUpdate);
+  
+  // Bidirectional Streaming: Live portfolio updates with user actions
+  rpc LivePortfolio(stream PortfolioAction) returns (stream PortfolioUpdate);
+  
+  // Unary RPC: Remove stock from portfolio
+  rpc RemoveStock(RemoveStockRequest) returns (RemoveStockResponse);
+  
+  // Unary RPC: Get historical data
+  rpc GetHistoricalData(HistoricalDataRequest) returns (HistoricalDataResponse);
+}
+
+// Messages for AddStock
+message AddStockRequest {
+  string user_id = 1;
+  string symbol = 2;
+  double quantity = 3;
+  double purchase_price = 4;
+  int64 purchase_date = 5; // Unix timestamp
+}
+
+message AddStockResponse {
+  bool success = 1;
+  string message = 2;
+  Stock stock = 3;
+}
+
+// Messages for GetPortfolio
+message GetPortfolioRequest {
+  string user_id = 1;
+}
+
+message GetPortfolioResponse {
+  repeated Stock stocks = 1;
+  double total_value = 2;
+  double total_gain_loss = 3;
+  double total_gain_loss_percentage = 4;
+}
+
+// Messages for Price Alerts
+message SetPriceAlertRequest {
+  string user_id = 1;
+  string symbol = 2;
+  double target_price = 3;
+  AlertCondition condition = 4;
+}
+
+enum AlertCondition {
+  ABOVE = 0;
+  BELOW = 1;
+}
+
+message SetPriceAlertResponse {
+  bool success = 1;
+  string message = 2;
+  string alert_id = 3;
+}
+
+// Messages for StreamPrices
+message StreamPricesRequest {
+  repeated string symbols = 1;
+  string user_id = 2;
+}
+
+message PriceUpdate {
+  string symbol = 1;
+  double current_price = 2;
+  double change = 3;
+  double change_percentage = 4;
+  int64 timestamp = 5;
+  double volume = 6;
+  double day_high = 7;
+  double day_low = 8;
+}
+
+// Messages for LivePortfolio (Bidirectional)
+message PortfolioAction {
+  enum ActionType {
+    SUBSCRIBE = 0;
+    UNSUBSCRIBE = 1;
+    ADD_STOCK = 2;
+    REMOVE_STOCK = 3;
+  }
+  
+  ActionType action = 1;
+  string symbol = 2;
+  string user_id = 3;
+  AddStockRequest add_details = 4;
+}
+
+message PortfolioUpdate {
+  enum UpdateType {
+    PRICE_CHANGE = 0;
+    ALERT_TRIGGERED = 1;
+    PORTFOLIO_SUMMARY = 2;
+  }
+  
+  UpdateType type = 1;
+  PriceUpdate price_update = 2;
+  Alert alert = 3;
+  GetPortfolioResponse portfolio_summary = 4;
+  int64 timestamp = 5;
+}
+
+// Messages for RemoveStock
+message RemoveStockRequest {
+  string user_id = 1;
+  string stock_id = 2;
+}
+
+message RemoveStockResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Messages for Historical Data
+message HistoricalDataRequest {
+  string symbol = 1;
+  int64 start_date = 2;
+  int64 end_date = 3;
+  string interval = 4; // "1d", "1h", etc.
+}
+
+message HistoricalDataResponse {
+  string symbol = 1;
+  repeated HistoricalPrice prices = 2;
+}
+
+message HistoricalPrice {
+  int64 timestamp = 1;
+  double open = 2;
+  double high = 3;
+  double low = 4;
+  double close = 5;
+  double volume = 6;
+}
+
+// Common Messages
+message Stock {
+  string id = 1;
+  string symbol = 2;
+  string name = 3;
+  double quantity = 4;
+  double purchase_price = 5;
+  double current_price = 6;
+  double gain_loss = 7;
+  double gain_loss_percentage = 8;
+  int64 purchase_date = 9;
+}
+
+message Alert {
+  string id = 1;
+  string symbol = 2;
+  double target_price = 3;
+  double triggered_price = 4;
+  AlertCondition condition = 5;
+  int64 created_at = 6;
+  int64 triggered_at = 7;
+  bool is_triggered = 8;
+}
