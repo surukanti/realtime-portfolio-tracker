@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
+	pb "github.com/chinnareddy578/realtime-portfolio-tracker/backend/pkg/pb"
 	"github.com/redis/go-redis/v9"
-	pb "github.com/yourusername/realtime-portfolio-tracker/backend/pkg/pb"
 )
 
 type PriceManager struct {

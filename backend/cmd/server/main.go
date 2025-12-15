@@ -16,10 +16,10 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	pb "github.com/yourusername/realtime-portfolio-tracker/backend/pkg/pb"
-	"github.com/yourusername/realtime-portfolio-tracker/backend/internal/repository"
-	"github.com/yourusername/realtime-portfolio-tracker/backend/internal/service"
-	"github.com/yourusername/realtime-portfolio-tracker/backend/internal/stream"
+	"github.com/chinnareddy578/realtime-portfolio-tracker/backend/internal/repository"
+	"github.com/chinnareddy578/realtime-portfolio-tracker/backend/internal/service"
+	"github.com/chinnareddy578/realtime-portfolio-tracker/backend/internal/stream"
+	pb "github.com/chinnareddy578/realtime-portfolio-tracker/backend/pkg/pb"
 )
 
 func main() {
@@ -38,7 +38,7 @@ func main() {
 	// Connect to PostgreSQL
 	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPass, dbName)
-	
+
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)

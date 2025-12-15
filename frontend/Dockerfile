@@ -7,20 +7,15 @@ RUN apk add --no-cache protobuf-dev
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY frontend/package*.json ./
 
 # Install dependencies
 RUN npm install
 
-# Copy proto files and source
-COPY ../proto /app/proto
-COPY public ./public
-COPY src ./src
-
-# Generate proto files (requires grpc-web protoc plugin)
-RUN npm install -g grpc-tools
-# Note: In production, you'd generate these beforehand
-# RUN npm run proto
+# Copy proto files and source (context is repo root)
+COPY proto /app/proto
+COPY frontend/public ./public
+COPY frontend/src ./src
 
 # Build the app
 RUN npm run build

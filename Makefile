@@ -8,15 +8,31 @@ help: ## Show this help message
 
 proto: ## Generate protobuf code for backend and frontend
 	@echo "Generating protobuf code..."
-	@cd backend && mkdir -p pkg/pb && \
-		protoc --go_out=./pkg/pb --go_opt=paths=source_relative \
+	@export PATH="$$(go env GOPATH)/bin:$$PATH" && \
+	cd backend && mkdir -p pkg/pb && \
+		protoc -I=../proto --go_out=./pkg/pb --go_opt=paths=source_relative \
 		--go-grpc_out=./pkg/pb --go-grpc_opt=paths=source_relative \
 		../proto/portfolio.proto
-	@cd frontend && mkdir -p src/proto && \
+	@echo "✓ Backend proto files generated"
+	@if command -v protoc-gen-js >/dev/null 2>&1 && command -v protoc-gen-grpc-web >/dev/null 2>&1; then \
+		cd frontend && mkdir -p src/proto && \
 		protoc -I=../proto portfolio.proto \
 		--js_out=import_style=commonjs:./src/proto \
-		--grpc-web_out=import_style=commonjs,mode=grpcwebtext:./src/proto
-	@echo "✓ Proto files generated"
+		--grpc-web_out=import_style=commonjs,mode=grpcwebtext:./src/proto && \
+		echo "✓ Frontend proto files generated"; \
+	else \
+		echo "⚠️  Skipping frontend proto generation (protoc-gen-js/protoc-gen-grpc-web not installed)"; \
+	fi
+	@echo "✓ Proto generation complete"
+
+proto-backend: ## Generate protobuf code for backend only
+	@echo "Generating backend protobuf code..."
+	@export PATH="$$(go env GOPATH)/bin:$$PATH" && \
+	cd backend && mkdir -p pkg/pb && \
+		protoc -I=../proto --go_out=./pkg/pb --go_opt=paths=source_relative \
+		--go-grpc_out=./pkg/pb --go-grpc_opt=paths=source_relative \
+		../proto/portfolio.proto
+	@echo "✓ Backend proto files generated"
 
 build: ## Build all Docker images
 	docker-compose build

@@ -1,5 +1,3 @@
-version: '3.9'
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -38,11 +36,11 @@ services:
 
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./backend/Dockerfile
     container_name: portfolio-backend
     ports:
-      - "50051:50051"  # gRPC
+      - "50052:50051"  # gRPC (host 50052 -> container 50051 to avoid host conflict)
       - "8080:8080"    # gRPC-Web (Envoy proxy)
     environment:
       - DB_HOST=postgres
@@ -78,8 +76,8 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./frontend/Dockerfile
     container_name: portfolio-frontend
     ports:
       - "3000:3000"

@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"fmt"
 
+	pb "github.com/chinnareddy578/realtime-portfolio-tracker/backend/pkg/pb"
 	"github.com/google/uuid"
-	pb "github.com/yourusername/realtime-portfolio-tracker/backend/pkg/pb"
 )
 
 type AlertRepository struct {

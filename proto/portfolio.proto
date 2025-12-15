@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package portfolio;
 
-option go_package = "github.com/yourusername/realtime-portfolio-tracker/backend/pkg/pb";
+option go_package = "github.com/chinnareddy578/realtime-portfolio-tracker/backend/pkg/pb";
 
 // Portfolio Service Definition
 service PortfolioService {

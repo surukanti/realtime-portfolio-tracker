@@ -7,9 +7,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/yourusername/realtime-portfolio-tracker/backend/internal/repository"
-	"github.com/yourusername/realtime-portfolio-tracker/backend/internal/stream"
-	pb "github.com/yourusername/realtime-portfolio-tracker/backend/pkg/pb"
+	"github.com/chinnareddy578/realtime-portfolio-tracker/backend/internal/repository"
+	"github.com/chinnareddy578/realtime-portfolio-tracker/backend/internal/stream"
+	pb "github.com/chinnareddy578/realtime-portfolio-tracker/backend/pkg/pb"
 )
 
 type PortfolioService struct {
