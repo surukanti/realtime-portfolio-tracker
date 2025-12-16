@@ -6,10 +6,17 @@ Complete step-by-step guide to get the project running.
 
 Make sure you have the following installed:
 
-- **Go 1.21+**: [Download](https://golang.org/dl/)
+- **Go 1.24+**: [Download](https://golang.org/dl/)
 - **Node.js 18+**: [Download](https://nodejs.org/)
 - **Docker & Docker Compose**: [Download](https://www.docker.com/get-started)
 - **Protocol Buffers Compiler (protoc)**: See installation below
+
+### Quick Check
+
+```bash
+# Run system health check
+make doctor
+```
 
 ### Installing protoc
 
@@ -30,6 +37,19 @@ Download from [GitHub Releases](https://github.com/protocolbuffers/protobuf/rele
 ### Installing gRPC Tools
 
 ```bash
+# Install all required tools automatically
+make install-tools
+
+# This installs:
+# - protoc-gen-go, protoc-gen-go-grpc (Go)
+# - grpc-tools (Node.js)
+# - grpcurl (testing)
+# - Code quality tools (golangci-lint, staticcheck, etc.)
+```
+
+Or install manually:
+
+```bash
 # Go plugins
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
@@ -38,7 +58,7 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 export PATH="$PATH:$(go env GOPATH)/bin"
 
 # gRPC-Web plugin (for frontend)
-npm install -g grpc-tools grpc_tools_node_protoc_ts
+npm install -g grpc-tools
 ```
 
 ## 📁 Project Structure
@@ -70,6 +90,19 @@ realtime-portfolio-tracker/
 
 ## 🔧 Setup Steps
 
+### Quick Setup (Recommended)
+
+```bash
+# Clone and complete setup in one command
+git clone https://github.com/yourusername/realtime-portfolio-tracker.git
+cd realtime-portfolio-tracker
+
+# Complete setup (environment, dependencies, proto generation, build)
+make setup
+```
+
+### Manual Setup Steps
+
 ### 1. Clone the Repository
 
 ```bash
@@ -80,37 +113,33 @@ cd realtime-portfolio-tracker
 ### 2. Setup Environment Variables
 
 ```bash
-cp .env.example .env
+# Check and setup environment
+make env-check
+
+# Edit .env and add your Alpha Vantage API key (free from https://www.alphavantage.co/support/#api-key)
+# ALPHA_VANTAGE_API_KEY=your_key_here
 ```
 
-Edit `.env` and add your Alpha Vantage API key (free from https://www.alphavantage.co/support/#api-key):
-```
-ALPHA_VANTAGE_API_KEY=your_key_here
+### 3. Install Dependencies and Generate Code
+
+```bash
+# Install all dependencies
+make install
+
+# Generate protocol buffer code for all components
+make proto
 ```
 
-### 3. Generate Protocol Buffer Code
+Or manually:
 
 **For Backend (Go):**
 ```bash
-cd backend
-mkdir -p pkg/pb
-
-protoc --go_out=./pkg/pb --go_opt=paths=source_relative \
-    --go-grpc_out=./pkg/pb --go-grpc_opt=paths=source_relative \
-    ../proto/portfolio.proto
+make install-backend proto-backend
 ```
 
 **For Frontend (JavaScript):**
 ```bash
-cd frontend
-
-# Install protoc plugins if not done
-npm install -g grpc-tools
-
-# Generate JS code
-protoc -I=../proto portfolio.proto \
-    --js_out=import_style=commonjs:./src/proto \
-    --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./src/proto
+make install-frontend proto-frontend
 ```
 
 ## 🐳 Running with Docker (Recommended)
@@ -118,44 +147,51 @@ protoc -I=../proto portfolio.proto \
 This is the easiest way to get everything running.
 
 ```bash
-# From project root
-docker-compose up --build
+# Build and start all services
+make up
 
-# To run in background
-docker-compose up -d
+# Or build first, then start
+make build up
 
 # View logs
-docker-compose logs -f backend
+make logs
+
+# View specific service logs
+make logs-backend
 
 # Stop everything
-docker-compose down
+make down
 ```
 
 The services will be available at:
 - **Frontend**: http://localhost:3000
-- **Backend gRPC**: localhost:50051
-- **Backend gRPC-Web**: http://localhost:8081
+- **gRPC-Web API**: http://localhost:8081
+- **Backend gRPC**: localhost:50052
+- **Envoy Admin Interface**: http://localhost:9901
+- **PostgreSQL**: localhost:5432
+- **Redis**: localhost:6379
 
 ## 💻 Running Manually (Development)
 
-### Start PostgreSQL and Redis
+### Start Infrastructure Services
 
 ```bash
-docker-compose up postgres redis -d
+# Start databases and proxy
+make up postgres redis envoy
+
+# Or manually
+docker-compose up postgres redis envoy -d
 ```
 
 ### Run Backend
 
 ```bash
+# Install dependencies and run in development mode
+make install-backend dev-backend
+
+# Or manually:
 cd backend
-
-# Install dependencies
 go mod download
-
-# Run migrations (if needed)
-psql -h localhost -U portfolio_user -d portfolio_db -f migrations/001_init.sql
-
-# Run server
 go run cmd/server/main.go
 ```
 
@@ -167,49 +203,54 @@ You should see:
 🚀 gRPC Server listening on :50051
 ```
 
-### Run Envoy Proxy (for gRPC-Web)
-
-```bash
-docker run -d -v "$(pwd)/envoy.yaml:/etc/envoy/envoy.yaml:ro" \
-    -p 8081:8081 -p 9901:9901 \
-    envoyproxy/envoy:v1.28-latest
-```
-
 ### Run Frontend
 
 ```bash
+# Install dependencies and run in development mode
+make install-frontend dev-frontend
+
+# Or manually:
 cd frontend
-
-# Install dependencies
 npm install
-
-# Start development server
 npm start
 ```
 
 Frontend will open at http://localhost:3000
 
-## 🧪 Testing the gRPC Server
+### Run Full Development Stack
 
-### Using grpcurl
-
-Install grpcurl:
 ```bash
-# macOS
-brew install grpcurl
-
-# Go install
-go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
+# Start everything in development mode
+make dev-full
 ```
 
-Test the server:
+## 🧪 Testing the gRPC Server
+
+### Using Makefile Commands
+
 ```bash
-# List services
-grpcurl -plaintext localhost:50051 list
+# Install grpcurl and other tools
+make install-tools
+
+# Check gRPC service health
+make grpc-health
+
+# List all services
+make grpc-list
+
+# Test basic functionality
+make grpc-test
+```
+
+### Manual Testing with grpcurl
+
+```bash
+# List services (note: port 50052 when using Docker)
+grpcurl -plaintext localhost:50052 list
 
 # Get portfolio
 grpcurl -plaintext -d '{"user_id": "demo-user-1"}' \
-    localhost:50051 portfolio.PortfolioService/GetPortfolio
+    localhost:50052 portfolio.PortfolioService/GetPortfolio
 
 # Add a stock
 grpcurl -plaintext -d '{
@@ -218,13 +259,13 @@ grpcurl -plaintext -d '{
     "quantity": 10,
     "purchase_price": 150.00,
     "purchase_date": 1234567890
-}' localhost:50051 portfolio.PortfolioService/AddStock
+}' localhost:50052 portfolio.PortfolioService/AddStock
 
 # Stream prices (Ctrl+C to stop)
 grpcurl -plaintext -d '{
     "user_id": "demo-user-1",
     "symbols": ["AAPL", "GOOGL", "MSFT"]
-}' localhost:50051 portfolio.PortfolioService/StreamPrices
+}' localhost:50052 portfolio.PortfolioService/StreamPrices
 ```
 
 ### Using BloomRPC
@@ -258,22 +299,36 @@ SELECT * FROM users;
 ### View Application Logs
 
 ```bash
-# Backend
-docker-compose logs -f backend
-
 # All services
-docker-compose logs -f
+make logs
+
+# Backend only
+make logs-backend
+
+# Database logs
+make logs-db
+
+# Envoy proxy logs
+make logs-envoy
 
 # Envoy admin interface
 open http://localhost:9901
 ```
 
-### Redis CLI
+### Database and Cache Access
 
 ```bash
-docker exec -it portfolio-redis redis-cli
+# PostgreSQL shell
+make db-shell
 
-# View cached prices
+# Check database status
+make db-status
+
+# Redis CLI
+make redis-shell
+
+# View cached prices in Redis
+redis-cli
 KEYS price:*
 GET price:AAPL
 ```
@@ -324,12 +379,17 @@ docker ps | grep envoy
 ### Build Production Images
 
 ```bash
-# Build all services
+# Build production images
+make build-prod
+
+# Or manually:
 docker-compose -f docker-compose.prod.yml build
 
-# Push to registry
-docker tag portfolio-backend:latest your-registry/portfolio-backend:v1.0
-docker push your-registry/portfolio-backend:v1.0
+# Deploy to development
+make deploy-dev
+
+# Deploy to production (when configured)
+make deploy-prod
 ```
 
 ### Environment Variables for Production

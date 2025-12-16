@@ -33,27 +33,28 @@ A high-performance stock portfolio management system built with gRPC, featuring 
 ### Tech Stack
 
 **Backend:**
-- Go 1.21+
+- Go 1.24+
 - gRPC & Protocol Buffers
 - PostgreSQL (portfolio data)
 - Redis (price caching)
-- Alpha Vantage/Finnhub API (market data)
+- Alpha Vantage API (market data)
 
 **Frontend:**
-- React 18+
+- React 18.2+
 - gRPC-Web
 - Recharts (visualization)
-- TailwindCSS
+- Lucide React (icons)
 
 **DevOps:**
 - Docker & Docker Compose
-- GitHub Actions (CI/CD)
+- Envoy Proxy (gRPC-Web gateway)
+- Comprehensive Makefile (build, test, deploy)
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 ```bash
-# Install Go 1.21+
+# Install Go 1.24+
 go version
 
 # Install Protocol Buffers Compiler
@@ -61,31 +62,48 @@ go version
 brew install protobuf
 
 # Ubuntu/Debian
-apt-get install protobuf-compiler
+sudo apt-get install protobuf-compiler
 
 # Install gRPC tools
 go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 ```
 
-### Running with Docker Compose
+### Quick Start with Makefile
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/realtime-portfolio-tracker.git
 cd realtime-portfolio-tracker
 
-# Start all services
-docker-compose up -d
+# Complete setup (install deps, generate proto, build images)
+make setup
 
-# View logs
-docker-compose logs -f backend
+# Start all services
+make up
+
+# View comprehensive help
+make help
 ```
 
 The application will be available at:
-- Frontend: http://localhost:3000
-- Backend gRPC: localhost:50051
-- Backend gRPC-Web: http://localhost:8080
+- **Frontend**: http://localhost:3000
+- **gRPC-Web API**: http://localhost:8081
+- **Backend gRPC**: localhost:50052
+- **Envoy Admin**: http://localhost:9901
+
+### Alternative: Manual Development
+
+```bash
+# Start databases only
+make up postgres redis envoy
+
+# Run backend in development mode
+make dev-backend
+
+# Run frontend in development mode (new terminal)
+make dev-frontend
+```
 
 ### Manual Setup
 
@@ -93,27 +111,54 @@ The application will be available at:
 ```bash
 cd backend
 
-# Install dependencies
-go mod download
+# Install dependencies and generate proto
+make install-backend proto-backend
 
-# Generate proto files
-protoc --go_out=. --go_opt=paths=source_relative \
-    --go-grpc_out=. --go-grpc_opt=paths=source_relative \
-    ../proto/portfolio.proto
-
-# Run server
-go run cmd/server/main.go
+# Run server in development mode
+make dev-backend
 ```
 
 **Frontend:**
 ```bash
 cd frontend
 
-# Install dependencies
-npm install
+# Install dependencies and generate proto
+make install-frontend proto-frontend
 
 # Run development server
-npm run dev
+make dev-frontend
+```
+
+### Using the Makefile
+
+The project includes a comprehensive Makefile with many useful commands:
+
+```bash
+# Development
+make setup          # Complete project setup
+make dev            # Start full development stack
+make test           # Run all tests
+make lint           # Lint all code
+make format         # Format all code
+
+# Docker operations
+make up             # Start all services
+make down           # Stop all services
+make logs           # View all logs
+make clean          # Clean everything
+
+# Database
+make db-shell       # PostgreSQL shell
+make db-status      # Database status
+make db-backup      # Backup database
+
+# gRPC testing
+make grpc-health    # Check gRPC health
+make grpc-test      # Test gRPC endpoints
+
+# Health checks
+make health         # Check all services
+make doctor         # System health check
 ```
 
 ## 📖 API Documentation
@@ -143,13 +188,23 @@ See [proto/portfolio.proto](proto/portfolio.proto) for complete API definitions.
 ## 🧪 Testing
 
 ```bash
-# Backend tests
-cd backend
-go test ./...
+# Run all tests
+make test
 
-# Frontend tests
-cd frontend
-npm test
+# Backend tests only
+make test-backend
+
+# Frontend tests only
+make test-frontend
+
+# Generate coverage report
+make test-coverage
+
+# Run linting
+make lint
+
+# Auto-fix linting issues
+make lint-fix
 ```
 
 ## 📊 Key Metrics
