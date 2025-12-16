@@ -96,7 +96,7 @@ install-tools: ## Install required development tools
 	go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
 	go install golang.org/x/tools/cmd/goimports@latest
 	go install honnef.co/go/tools/cmd/staticcheck@latest
-	go install github.com/securecodewarrior/govulncheck@latest
+	go install golang.org/x/vuln/cmd/govulncheck@latest
 	@echo "✓ Tools installed"
 
 # ========================================================================================
@@ -116,15 +116,15 @@ proto-backend: ## Generate protobuf code for backend only
 
 proto-frontend: ## Generate protobuf code for frontend only
 	@echo "Generating frontend protobuf code..."
-	@if command -v grpc_tools_node_protoc_plugin >/dev/null 2>&1; then \
+	@if command -v protoc-gen-js >/dev/null 2>&1 && command -v protoc-gen-grpc-web >/dev/null 2>&1; then \
 		cd frontend && mkdir -p src/proto && \
 		protoc -I=../proto ../proto/portfolio.proto \
 		--js_out=import_style=commonjs:./src/proto \
 		--grpc-web_out=import_style=commonjs,mode=grpcwebtext:./src/proto && \
 		echo "✓ Frontend proto files generated"; \
 	else \
-		echo "⚠️  Skipping frontend proto generation (grpc_tools_node_protoc_plugin not installed)"; \
-		echo "   Install with: npm install -g grpc-tools"; \
+		echo "⚠️  Skipping frontend proto generation (protoc-gen-js/protoc-gen-grpc-web not installed)"; \
+		echo "   Install with: npm install -g protoc-gen-js protoc-gen-grpc-web"; \
 	fi
 
 proto-clean: ## Clean generated protobuf files

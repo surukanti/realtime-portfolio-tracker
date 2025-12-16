@@ -55,19 +55,23 @@ make up
 
 ## 🎮 Using the App
 
-### Add Your First Stock
+### Explore Demo Portfolio
 
-1. In the "Add New Stock" section:
-   - Symbol: `AAPL`
-   - Quantity: `10`
-   - Purchase Price: `150`
-2. Click "Add Stock"
+The app comes with 6 demo stocks pre-loaded:
+- **AAPL** (Apple Inc.) - 10 shares at $150
+- **GOOGL** (Alphabet Inc.) - 5 shares at $2800
+- **MSFT** (Microsoft) - 8 shares at $300
+- **TSLA** (Tesla Inc.) - 15 shares at $200
+- **JPM** (JPMorgan Chase) - 12 shares at $180
+- **JNJ** (Johnson & Johnson) - 20 shares at $140
+
+Or add your own stock:
 
 ### Watch Live Prices
 
-1. Add a few more stocks (GOOGL, MSFT, TSLA)
-2. Click "▶️ Start Price Stream"
-3. Watch prices update in real-time! 📊
+1. Click "▶️ Start Price Stream" (demo stocks are already loaded!)
+2. Watch prices update in real-time from all 10 available stocks! 📊
+3. Try adding more stocks to see even more price action
 
 ## 🔧 Quick Commands
 
@@ -166,7 +170,7 @@ docker-compose logs postgres
 
 - Demo user ID is: `demo-user-1`
 - Prices update every 2 seconds
-- 8 stocks are pre-configured (AAPL, GOOGL, MSFT, AMZN, TSLA, META, NVDA, NFLX)
+- 10 stocks are pre-configured (AAPL, GOOGL, MSFT, AMZN, TSLA, META, NVDA, NFLX, JPM, JNJ)
 - Check `backend/internal/stream/price_manager.go` to add more stocks
 
 ## 📚 Learn More

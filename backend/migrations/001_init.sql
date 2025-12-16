@@ -47,8 +47,11 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Insert some sample stocks for demo user
 INSERT INTO stocks (id, user_id, symbol, name, quantity, purchase_price, purchase_date)
-VALUES 
+VALUES
     ('stock-1', 'demo-user-1', 'AAPL', 'Apple Inc.', 10, 150.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
     ('stock-2', 'demo-user-1', 'GOOGL', 'Alphabet Inc.', 5, 2800.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
-    ('stock-3', 'demo-user-1', 'MSFT', 'Microsoft Corporation', 8, 300.00, EXTRACT(EPOCH FROM NOW())::BIGINT)
+    ('stock-3', 'demo-user-1', 'MSFT', 'Microsoft Corporation', 8, 300.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
+    ('stock-4', 'demo-user-1', 'TSLA', 'Tesla Inc.', 15, 200.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
+    ('stock-5', 'demo-user-1', 'JPM', 'JPMorgan Chase & Co.', 12, 180.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
+    ('stock-6', 'demo-user-1', 'JNJ', 'Johnson & Johnson', 20, 140.00, EXTRACT(EPOCH FROM NOW())::BIGINT)
 ON CONFLICT (id) DO NOTHING;

@@ -33,14 +33,16 @@ func NewPriceManager(rdb *redis.Client) *PriceManager {
 func (pm *PriceManager) Start(ctx context.Context) {
 	// Initialize some default stocks with base prices
 	baseStocks := map[string]float64{
-		"AAPL":  175.50,
-		"GOOGL": 140.25,
-		"MSFT":  380.75,
-		"AMZN":  152.30,
-		"TSLA":  242.80,
-		"META":  485.20,
-		"NVDA":  495.60,
-		"NFLX":  475.90,
+		"AAPL":  175.50, // Apple Inc.
+		"GOOGL": 140.25, // Alphabet Inc.
+		"MSFT":  380.75, // Microsoft Corporation
+		"AMZN":  152.30, // Amazon.com Inc.
+		"TSLA":  242.80, // Tesla Inc.
+		"META":  485.20, // Meta Platforms Inc.
+		"NVDA":  495.60, // NVIDIA Corporation
+		"NFLX":  475.90, // Netflix Inc.
+		"JPM":   210.45, // JPMorgan Chase & Co.
+		"JNJ":   165.80, // Johnson & Johnson
 	}
 
 	for symbol, basePrice := range baseStocks {

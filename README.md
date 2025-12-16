@@ -129,6 +129,8 @@ make install-frontend proto-frontend
 make dev-frontend
 ```
 
+**Demo Portfolio**: The application comes with 6 pre-loaded stocks and streams live prices from 10 available symbols (AAPL, GOOGL, MSFT, AMZN, TSLA, META, NVDA, NFLX, JPM, JNJ).
+
 ### Using the Makefile
 
 The project includes a comprehensive Makefile with many useful commands:
