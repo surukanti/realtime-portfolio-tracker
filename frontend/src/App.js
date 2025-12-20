@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { PortfolioServiceClient } from './proto/PortfolioServiceClientPb';
+import { PortfolioServiceClient } from './proto/portfolio_grpc_web_pb';
 import * as messages from './proto/portfolio_pb';
 import './App.css';
 
