@@ -1,3 +1,14 @@
+-- Create the application user (note: this will only work if run as superuser)
+DO $$
+BEGIN
+   IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'portfolio_user') THEN
+      CREATE USER portfolio_user WITH PASSWORD 'portfolio_pass';
+   END IF;
+END
+$$;
+
+GRANT ALL PRIVILEGES ON DATABASE portfolio_db TO portfolio_user;
+
 -- Create users table (simplified for demo)
 CREATE TABLE IF NOT EXISTS users (
     id VARCHAR(100) PRIMARY KEY,
@@ -53,5 +64,11 @@ VALUES
     ('stock-3', 'demo-user-1', 'MSFT', 'Microsoft Corporation', 8, 300.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
     ('stock-4', 'demo-user-1', 'TSLA', 'Tesla Inc.', 15, 200.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
     ('stock-5', 'demo-user-1', 'JPM', 'JPMorgan Chase & Co.', 12, 180.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
-    ('stock-6', 'demo-user-1', 'JNJ', 'Johnson & Johnson', 20, 140.00, EXTRACT(EPOCH FROM NOW())::BIGINT)
+    ('stock-6', 'demo-user-1', 'JNJ', 'Johnson & Johnson', 20, 140.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
+    ('stock-7', 'demo-user-1', 'AMZN', 'Amazon.com Inc.', 25, 3200.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
+    ('stock-8', 'demo-user-1', 'NVDA', 'NVIDIA Corporation', 30, 450.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
+    ('stock-9', 'demo-user-1', 'META', 'Meta Platforms Inc.', 18, 330.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
+    ('stock-10', 'demo-user-1', 'NFLX', 'Netflix Inc.', 22, 380.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
+    ('stock-11', 'demo-user-1', 'V', 'Visa Inc.', 40, 220.00, EXTRACT(EPOCH FROM NOW())::BIGINT),
+    ('stock-12', 'demo-user-1', 'WMT', 'Walmart Inc.', 35, 140.00, EXTRACT(EPOCH FROM NOW())::BIGINT)
 ON CONFLICT (id) DO NOTHING;

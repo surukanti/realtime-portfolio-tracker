@@ -2,111 +2,102 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
-	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	_ "github.com/lib/pq"
-	"github.com/redis/go-redis/v9"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
+	"github.com/gorilla/mux"
 
 	"github.com/chinnareddy578/realtime-portfolio-tracker/backend/internal/repository"
 	"github.com/chinnareddy578/realtime-portfolio-tracker/backend/internal/service"
 	"github.com/chinnareddy578/realtime-portfolio-tracker/backend/internal/stream"
-	pb "github.com/chinnareddy578/realtime-portfolio-tracker/backend/pkg/pb"
 )
 
 func main() {
-	log.Println("Starting Portfolio Tracker gRPC Server...")
+	log.Println("Starting Portfolio Tracker HTTP Server...")
 
 	// Load configuration from environment
-	dbHost := getEnv("DB_HOST", "localhost")
-	dbPort := getEnv("DB_PORT", "5432")
-	dbUser := getEnv("DB_USER", "portfolio_user")
-	dbPass := getEnv("DB_PASSWORD", "portfolio_pass")
-	dbName := getEnv("DB_NAME", "portfolio_db")
-	redisHost := getEnv("REDIS_HOST", "localhost")
-	redisPort := getEnv("REDIS_PORT", "6379")
-	grpcPort := getEnv("GRPC_PORT", "50051")
+	httpPort := getEnv("HTTP_PORT", "8080")
 
-	// Connect to PostgreSQL
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		dbHost, dbPort, dbUser, dbPass, dbName)
+	// Use mock mode
+	log.Println("⚠️  Using mock data mode for testing")
 
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-	defer db.Close()
+	// Initialize repositories (use mock repos)
+	var stockRepo *repository.StockRepository
+	var alertRepo *repository.AlertRepository
+	stockRepo = nil
+	alertRepo = nil
 
-	// Wait for database to be ready
-	for i := 0; i < 30; i++ {
-		if err := db.Ping(); err == nil {
-			log.Println("✓ Connected to PostgreSQL")
-			break
-		}
-		log.Printf("Waiting for database... (%d/30)", i+1)
-		time.Sleep(2 * time.Second)
-	}
+	// Initialize price manager (mock mode)
+	var priceManager *stream.PriceManager
+	priceManager = nil
 
-	// Connect to Redis
-	rdb := redis.NewClient(&redis.Options{
-		Addr: fmt.Sprintf("%s:%s", redisHost, redisPort),
-	})
-	defer rdb.Close()
-
-	ctx := context.Background()
-	if err := rdb.Ping(ctx).Err(); err != nil {
-		log.Fatalf("Failed to connect to Redis: %v", err)
-	}
-	log.Println("✓ Connected to Redis")
-
-	// Initialize repositories
-	stockRepo := repository.NewStockRepository(db)
-	alertRepo := repository.NewAlertRepository(db)
-
-	// Initialize price manager (handles streaming and caching)
-	priceManager := stream.NewPriceManager(rdb)
-	go priceManager.Start(ctx)
-
-	// Initialize gRPC service
+	// Initialize HTTP service
 	portfolioService := service.NewPortfolioService(stockRepo, alertRepo, priceManager)
 
-	// Create gRPC server
-	grpcServer := grpc.NewServer(
-		grpc.MaxConcurrentStreams(1000),
-	)
-	pb.RegisterPortfolioServiceServer(grpcServer, portfolioService)
+	// Create HTTP server with Gorilla Mux
+	router := mux.NewRouter()
 
-	// Register reflection service for grpcurl testing
-	reflection.Register(grpcServer)
+	// CORS wrapper function
+	corsWrapper := func(handler http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 
-	// Start listening
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", grpcPort))
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
+			if r.Method == "OPTIONS" {
+				w.WriteHeader(http.StatusOK)
+				return
+			}
+
+			handler(w, r)
+		}
 	}
+
+	// API routes with CORS
+	router.HandleFunc("/api/portfolio", corsWrapper(portfolioService.GetPortfolioHTTP)).Methods("GET", "OPTIONS")
+	router.HandleFunc("/api/stocks", corsWrapper(portfolioService.AddStockHTTP)).Methods("POST", "OPTIONS")
+	router.HandleFunc("/api/alerts", corsWrapper(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" {
+			portfolioService.GetAlertsHTTP(w, r)
+		} else if r.Method == "POST" {
+			portfolioService.SetAlertHTTP(w, r)
+		} else if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	})).Methods("GET", "POST", "OPTIONS")
+	router.HandleFunc("/api/charts", corsWrapper(portfolioService.GetChartDataHTTP)).Methods("GET", "OPTIONS")
 
 	// Handle graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%s", httpPort),
+		Handler: router,
+	}
+
 	go func() {
-		log.Printf("🚀 gRPC Server listening on :%s", grpcPort)
-		if err := grpcServer.Serve(lis); err != nil {
+		log.Printf("🚀 HTTP Server listening on :%s", httpPort)
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Failed to serve: %v", err)
 		}
 	}()
 
 	<-stop
 	log.Println("\n🛑 Shutting down gracefully...")
-	grpcServer.GracefulStop()
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
+		log.Printf("Server forced to shutdown: %v", err)
+	}
 	log.Println("✓ Server stopped")
 }
 

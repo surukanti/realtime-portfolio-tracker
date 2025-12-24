@@ -8,22 +8,28 @@ option go_package = "github.com/chinnareddy578/realtime-portfolio-tracker/backen
 service PortfolioService {
   // Unary RPC: Add stock to portfolio
   rpc AddStock(AddStockRequest) returns (AddStockResponse);
-  
+
   // Unary RPC: Get portfolio summary
   rpc GetPortfolio(GetPortfolioRequest) returns (GetPortfolioResponse);
-  
+
   // Unary RPC: Set price alert
   rpc SetPriceAlert(SetPriceAlertRequest) returns (SetPriceAlertResponse);
-  
+
+  // Unary RPC: Get user alerts
+  rpc GetAlerts(GetAlertsRequest) returns (GetAlertsResponse);
+
+  // Unary RPC: Get chart data with technical indicators
+  rpc GetChartData(GetChartDataRequest) returns (GetChartDataResponse);
+
   // Server Streaming: Real-time price updates for watchlist
   rpc StreamPrices(StreamPricesRequest) returns (stream PriceUpdate);
-  
+
   // Bidirectional Streaming: Live portfolio updates with user actions
   rpc LivePortfolio(stream PortfolioAction) returns (stream PortfolioUpdate);
-  
+
   // Unary RPC: Remove stock from portfolio
   rpc RemoveStock(RemoveStockRequest) returns (RemoveStockResponse);
-  
+
   // Unary RPC: Get historical data
   rpc GetHistoricalData(HistoricalDataRequest) returns (HistoricalDataResponse);
 }
@@ -72,6 +78,50 @@ message SetPriceAlertResponse {
   bool success = 1;
   string message = 2;
   string alert_id = 3;
+}
+
+// Messages for GetAlerts
+message GetAlertsRequest {
+  string user_id = 1;
+}
+
+message GetAlertsResponse {
+  repeated Alert alerts = 1;
+}
+
+// Messages for Chart Data
+message GetChartDataRequest {
+  string symbol = 1;
+  string timeframe = 2; // "1m", "5m", "15m", "1h", "1d", etc.
+  int64 start_time = 3;
+  int64 end_time = 4;
+  repeated string indicators = 5; // ["sma", "rsi", "macd", etc.]
+}
+
+message GetChartDataResponse {
+  string symbol = 1;
+  repeated CandlestickData candlesticks = 2;
+  map<string, TechnicalIndicatorData> indicators = 3;
+}
+
+message CandlestickData {
+  int64 timestamp = 1;
+  double open = 2;
+  double high = 3;
+  double low = 4;
+  double close = 5;
+  double volume = 6;
+}
+
+message TechnicalIndicatorData {
+  string name = 1;
+  repeated IndicatorPoint points = 2;
+}
+
+message IndicatorPoint {
+  int64 timestamp = 1;
+  double value = 2;
+  map<string, double> additional_values = 3; // For indicators with multiple values like MACD
 }
 
 // Messages for StreamPrices
