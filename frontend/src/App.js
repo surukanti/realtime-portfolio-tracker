@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // Temporarily disable gRPC imports until proto files are regenerated
 // import { PortfolioServiceClient } from './proto/portfolio_grpc_web_pb';
 // import * as messages from './proto/portfolio_pb';
-import { createChart, ColorType, CandlestickSeries, HistogramSeries, LineSeries } from 'lightweight-charts';
+import { createChart, ColorType } from 'lightweight-charts';
 import './App.css';
 
 // Charts Component
@@ -247,10 +247,10 @@ function ChartsComponent() {
       // Try the direct chart API first (this should work in v5)
       console.log('Trying direct chart API...');
 
-      // In v4.x, use addSeries with series type
-      console.log('Using v4.x API with addSeries...');
+      // In v4.x, use addCandlestickSeries() method
+      console.log('Using v4.x API with addCandlestickSeries...');
 
-      const candlestickSeries = chartRef.current.addSeries(CandlestickSeries, {
+      const candlestickSeries = chartRef.current.addCandlestickSeries({
         upColor: '#26a69a',
         downColor: '#ef5350',
         borderVisible: false,
@@ -301,7 +301,7 @@ function ChartsComponent() {
       }
 
         // Add volume histogram
-        const volumeSeries = chartRef.current.addSeries(HistogramSeries, {
+        const volumeSeries = chartRef.current.addHistogramSeries({
           color: '#26a69a',
           priceFormat: {
             type: 'volume',
@@ -321,7 +321,7 @@ function ChartsComponent() {
 
         // Add technical indicators from backend data
         if (smaPoints.length > 0) {
-          const smaSeries = chartRef.current.addSeries(LineSeries, {
+          const smaSeries = chartRef.current.addLineSeries({
             color: '#2196F3',
             lineWidth: 2,
             title: 'SMA (20)',
@@ -330,7 +330,7 @@ function ChartsComponent() {
         }
 
         if (rsiPoints.length > 0) {
-          const rsiSeries = chartRef.current.addSeries(LineSeries, {
+          const rsiSeries = chartRef.current.addLineSeries({
             color: '#FF9800',
             lineWidth: 2,
             title: 'RSI (14)',
@@ -344,7 +344,7 @@ function ChartsComponent() {
         }
 
         if (macdPoints.length > 0) {
-          const macdSeries = chartRef.current.addSeries(LineSeries, {
+          const macdSeries = chartRef.current.addLineSeries({
             color: '#9C27B0',
             lineWidth: 2,
             title: 'MACD',
