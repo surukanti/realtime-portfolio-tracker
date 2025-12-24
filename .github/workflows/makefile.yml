@@ -1,24 +1,85 @@
-name: Makefile CI
+name: Makefile Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "develop" ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: portfolio_user
+          POSTGRES_PASSWORD: portfolio_pass
+          POSTGRES_DB: portfolio_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
     - uses: actions/checkout@v4
 
-    - name: configure
-      run: ./configure
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.24'
+        cache: true
+        cache-dependency-path: backend/go.sum
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y protobuf-compiler
 
     - name: Install dependencies
-      run: make
+      run: make install-tools
 
-    - name: Run check
-      run: make up
+    - name: Generate protobuf
+      run: make proto
+
+    - name: Format code
+      run: make format
+      continue-on-error: true
+
+    - name: Lint code
+      run: make lint
+      continue-on-error: true
+
+    - name: Build
+      run: make build-backend
+
+    - name: Run tests
+      run: make test-backend
+      env:
+        DATABASE_URL: postgres://portfolio_user:portfolio_pass@localhost:5432/portfolio_db
+        REDIS_URL: redis://localhost:6379
+
+    - name: Security check
+      run: make security-check
+      continue-on-error: true
