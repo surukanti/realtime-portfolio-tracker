@@ -18,7 +18,7 @@ COPY frontend/public ./public
 COPY frontend/src ./src
 
 # Copy pre-generated protobuf files
-COPY frontend/src/proto ./src/proto
+
 
 # Build the app
 RUN npm run build

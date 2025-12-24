@@ -16,9 +16,9 @@ RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 
 # Copy proto files and generate
 COPY proto /app/proto
-RUN mkdir -p backend/pkg/pb
-RUN protoc -I=/app/proto --go_out=./backend/pkg/pb --go_opt=paths=source_relative \
-    --go-grpc_out=./backend/pkg/pb --go-grpc_opt=paths=source_relative \
+RUN mkdir -p pkg/pb
+RUN protoc -I=/app/proto --go_out=./pkg/pb --go_opt=paths=source_relative \
+    --go-grpc_out=./pkg/pb --go-grpc_opt=paths=source_relative \
     /app/proto/portfolio.proto
 
 # Copy source code
