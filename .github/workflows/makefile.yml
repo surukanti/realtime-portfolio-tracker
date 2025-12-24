@@ -57,6 +57,9 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y protobuf-compiler
 
+    - name: Install Go linting tools
+      run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
     - name: Install dependencies
       run: make install-tools
 
@@ -68,18 +71,23 @@ jobs:
       continue-on-error: true
 
     - name: Lint code
-      run: make lint
+      run: |
+        cd backend && golangci-lint run ./...
       continue-on-error: true
 
     - name: Build
-      run: make build-backend
+      run: |
+        cd backend && go build -o server ./cmd/server
 
     - name: Run tests
-      run: make test-backend
+      run: |
+        cd backend && go test -v ./...
       env:
         DATABASE_URL: postgres://portfolio_user:portfolio_pass@localhost:5432/portfolio_db
         REDIS_URL: redis://localhost:6379
 
     - name: Security check
-      run: make security-check
+      run: |
+        cd backend && go install github.com/securego/gosec/v2/cmd/gosec@latest
+        gosec ./...
       continue-on-error: true
